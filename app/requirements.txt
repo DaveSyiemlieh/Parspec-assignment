@@ -3,3 +3,6 @@ uvicorn
 psycopg2-binary
 pydantic
 sqlalchemy
+alembic
+databases
+alembic_utils
