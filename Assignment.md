@@ -34,7 +34,11 @@ Build a backend system to manage and process orders in an e-commerce platform. T
 
 ### Scalability: 
 - Ensure the system can handle 1,000 concurrent orders (simulate load).
+
+
 ---
+
+
 ### Deliverables
 #### Functional Backend Code:
 - A fully functioning backend service with:
@@ -53,10 +57,10 @@ Build a backend system to manage and process orders in an e-commerce platform. T
 
 #### Documentation:
 - A README.md file that includes:
-- Instructions for setting up and running the application.
-- Example API requests and responses (e.g: using curl or Postman).
-- Explanation of design decisions and trade-offs.
-- Assumptions made during development.
+  - Instructions for setting up and running the application.
+  - Example API requests and responses (e.g: using curl or Postman).
+  - Explanation of design decisions and trade-offs.
+  - Assumptions made during development.
 
 #### Tests:
 - Unit tests for key components:
