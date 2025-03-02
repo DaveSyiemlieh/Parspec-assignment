@@ -27,7 +27,7 @@ from sqlalchemy.orm import Mapped, mapped_column, sessionmaker, declarative_base
 from sqlalchemy.sql import func
 from datetime import datetime
 
-db = sa.create_engine("postgresql+psycopg2://order:pg@localhost/order")
+db = sa.create_engine("postgresql+psycopg2://order:pg@db:5432/order")
 Session = sessionmaker(bind=db)
 Base = declarative_base()
 
