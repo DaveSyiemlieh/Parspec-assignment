@@ -1,8 +1,8 @@
-"""create orders table
+"""create order table
 
-Revision ID: 5e34282fad7a
+Revision ID: 31e0c9550697
 Revises: 
-Create Date: 2025-03-02 00:10:06.506565
+Create Date: 2025-03-02 18:32:31.538800
 
 """
 from typing import Sequence, Union
@@ -12,11 +12,13 @@ import sqlalchemy as sa
 from alembic_utils.pg_function import PGFunction
 from alembic_utils.pg_trigger import PGTrigger
 
+
 # revision identifiers, used by Alembic.
-revision: str = '5e34282fad7a'
+revision: str = '31e0c9550697'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
+
 
 tablename = "order"
 trigger_function = PGFunction(  # Remove this from upcoming migrations
