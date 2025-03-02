@@ -74,7 +74,7 @@ curl --location 'http://localhost:8000/metrics'
 4. Ideally, the metrics API would query some metrics-service such as Prometheus for this kind of info, but for simplicity, a DB query was used instead (Hence the extra columns in the DB)
 
 ## Assumptions made
-1. Processing time for a message takes 0.2s - 0.5s every time.
+1. Processing time for a message takes 0.2s - 1s every time.
 2. Processing is synchronous
 3. Processing is not I/O bound
 4. Get orders API would be specific to a user (based on Amazon's `order` section)

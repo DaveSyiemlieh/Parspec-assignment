@@ -27,8 +27,9 @@ from sqlalchemy.orm import Mapped, mapped_column, sessionmaker, declarative_base
 from sqlalchemy.sql import func
 from datetime import datetime
 
-db = sa.create_engine("postgresql+psycopg2://order:pg@db:5432/order")
+db = sa.create_engine("postgresql+psycopg2://order:pg@db:5432/order") # Would ideally be in an env var
 Session = sessionmaker(bind=db)
+session = Session()
 Base = declarative_base()
 
 class Order(Base):
@@ -40,7 +41,7 @@ class Order(Base):
     status: Mapped[str]
     created_at: Mapped[datetime]
     updated_at: Mapped[datetime]
-    processing_time: Mapped[int]
+    processing_time: Mapped[float]
 #------------------------------------------------------------------#
 
 
@@ -48,7 +49,6 @@ class Order(Base):
 #---------------------------- APIs --------------------------------#
 app = FastAPI()
 
-db_session = None
 @app.post("/order")
 def create_orders(req: CreateOrderRequest):
     order = Order(
@@ -58,9 +58,11 @@ def create_orders(req: CreateOrderRequest):
         total_amount = req.total_amount,
         status = "PENDING",
     )
-    with Session() as session:
-        session.add(order)
-        session.commit()
+    session.add(order)
+    session.commit()
+    
+    # Send event for async processing
+    task_queue.put(req.order_id)
     
     return {"content": "Order created successfully"}
 
@@ -69,8 +71,7 @@ def create_orders(req: CreateOrderRequest):
 def orders_status(user_id: int):
     stmt = sa.select(Order).where(Order.user_id == user_id)
     order_list = []
-    for order in Session().scalars(stmt):
-        print(order)
+    for order in session.scalars(stmt):
         order_list.append({
             "id": order.id,
             "status": order.status
@@ -80,20 +81,19 @@ def orders_status(user_id: int):
 
 @app.get("/metrics")
 def metrics():
-    with Session() as session:
-        order_info = session.query(func.count().label("total_orders"), func.avg(Order.processing_time).label("average_processing_time")).first()
-        order_by_status = session.query(func.count().label("count"), Order.status).group_by(Order.status).all()
-        
-        pending_count = 0
-        processing_count = 0
-        completed_count = 0
-        for sc in order_by_status:
-            if sc.status == 'PENDING':
-                pending_count = sc.count if sc.count != None else 0
-            elif sc.status == 'PROCESSING':
-                processing_count = sc.count if sc.count != None else 0
-            else:
-                completed_count = sc.count if sc.count != None else 0
+    order_info = session.query(func.count().label("total_orders"), func.avg(Order.processing_time).label("average_processing_time")).first()
+    order_by_status = session.query(func.count().label("count"), Order.status).group_by(Order.status).all()
+    
+    pending_count = 0
+    processing_count = 0
+    completed_count = 0
+    for sc in order_by_status:
+        if sc.status == 'PENDING':
+            pending_count = sc.count if sc.count != None else 0
+        elif sc.status == 'PROCESSING':
+            processing_count = sc.count if sc.count != None else 0
+        else:
+            completed_count = sc.count if sc.count != None else 0
 
     return MetricsResponse(
         total_orders = order_info.total_orders,
@@ -106,3 +106,39 @@ def metrics():
     )
 #------------------------------------------------------------------#
 
+
+
+#------------------------Queueing Mechanism------------------------#
+
+import queue
+import threading
+import time
+import random
+
+# Create an in-memory queue
+task_queue = queue.Queue()
+
+# Consumer
+def consumer():
+    while True:
+        order_id = task_queue.get()
+        print(f"Consuming {order_id}")
+
+        # Mark order as processing
+        row = session.query(Order).filter(Order.id == order_id).first()
+        row.status="PROCESSING"
+        session.commit()
+        
+        # Processing logic
+        processing_time = random.uniform(0.2, 1)
+        time.sleep(processing_time) # Assumed workload
+
+        # Mark order as completed
+        row.status="COMPLETED"
+        row.processing_time = processing_time
+        session.commit()
+        task_queue.task_done()
+
+consumer_thread = threading.Thread(target=consumer, daemon=True)
+consumer_thread.start()
+#------------------------------------------------------------------#

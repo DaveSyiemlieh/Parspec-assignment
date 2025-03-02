@@ -54,7 +54,7 @@ def upgrade() -> None:
         sa.Column('status', sa.String(15), nullable=False),
         sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.now()),
         sa.Column('updated_at', sa.TIMESTAMP, server_default=sa.func.now()),
-        sa.Column('processing_time', sa.Integer, nullable=True),
+        sa.Column('processing_time', sa.Float, nullable=True),
     )
 
     op.create_entity(trigger_function)
